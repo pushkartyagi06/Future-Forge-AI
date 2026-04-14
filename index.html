@@ -588,7 +588,7 @@ async function generate() {
   startSteps();
 
   try {
-    const res    = await fetch('http://localhost:3000/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+    const res    = await fetch('https://future-forge-ai.onrender.com/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
     const result = await res.json();
     stopSteps();
     document.getElementById('loading').style.display = 'none';
