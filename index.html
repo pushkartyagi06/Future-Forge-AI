@@ -588,7 +588,7 @@ async function generate() {
   startSteps();
 
   try {
-    const res    = await fetch('https://future-forge-ai.onrender.com/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+    const res    = await fetch('http://localhost:3000/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
     const result = await res.json();
     stopSteps();
     document.getElementById('loading').style.display = 'none';
@@ -611,49 +611,82 @@ async function generate() {
 
 // ══ PDF DOWNLOAD ═════════════════════════════════════════════
 function downloadPDF() {
-  // Clone the result box so we can style it for PDF without affecting the screen
-  const original = document.getElementById('resultBox');
-  const clone = original.cloneNode(true);
+  // Build PDF content from scratch as clean plain HTML
+  const outputHTML = document.getElementById('output').innerHTML;
+  const goal = lastUserData.goal || 'Your Goal';
+  const date = new Date().toLocaleDateString();
 
-  // Apply clean white styles for PDF
-  clone.style.cssText = 'background:#ffffff;color:#0f172a;padding:20px;max-width:800px;font-family:Arial,sans-serif;';
-  clone.querySelectorAll('.section,.score-section').forEach(el => {
-    el.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:14px;opacity:1;transform:none;';
-  });
-  clone.querySelectorAll('h3').forEach(el => { el.style.cssText = 'color:#16a34a;font-size:14px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #dcfce7;'; });
-  clone.querySelectorAll('p,li').forEach(el => { el.style.color = '#374151'; el.style.fontSize = '12px'; });
-  clone.querySelectorAll('.phase-block').forEach(el => { el.style.cssText = 'background:#f0fdf4;border-left:3px solid #22c55e;padding:10px 14px;margin-bottom:8px;border-radius:0 8px 8px 0;'; });
-  clone.querySelectorAll('.phase-title').forEach(el => { el.style.cssText = 'color:#0f172a;font-weight:700;font-size:12px;'; });
-  clone.querySelectorAll('.meta-grid').forEach(el => { el.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:10px;'; });
-  clone.querySelectorAll('.meta-item').forEach(el => { el.style.cssText = 'background:#f1f5f9;border-radius:8px;padding:8px;'; });
-  clone.querySelectorAll('.meta-label').forEach(el => { el.style.cssText = 'font-size:9px;color:#64748b;text-transform:uppercase;'; });
-  clone.querySelectorAll('.meta-val').forEach(el => { el.style.cssText = 'font-size:13px;color:#0f172a;font-weight:700;'; });
-  clone.querySelectorAll('.result-header h2').forEach(el => { el.style.cssText = 'color:#16a34a;font-size:22px;-webkit-text-fill-color:#16a34a;'; });
-  clone.querySelectorAll('.result-header p').forEach(el => { el.style.color = '#64748b'; });
-  clone.querySelectorAll('.action-btns,.btn-pdf,.btn-restart').forEach(el => { el.style.display = 'none'; });
-  clone.querySelectorAll('canvas').forEach(el => { el.style.display = 'none'; });
-  clone.querySelectorAll('.score-section').forEach(el => { el.style.display = 'none'; });
+  const pdfHTML = `
+    <div style="font-family:Arial,sans-serif;background:#fff;color:#0f172a;padding:30px;max-width:780px;">
+      
+      <!-- Header -->
+      <div style="text-align:center;padding-bottom:20px;border-bottom:3px solid #22c55e;margin-bottom:24px;">
+        <h1 style="color:#16a34a;font-size:26px;font-weight:800;margin-bottom:6px;">⚒️ Future Forge AI</h1>
+        <p style="color:#64748b;font-size:13px;">Career Roadmap for <strong style="color:#0f172a;">${goal}</strong></p>
+        <p style="color:#94a3b8;font-size:11px;margin-top:4px;">Generated on ${date}</p>
+      </div>
 
-  // Add header to PDF
-  const header = document.createElement('div');
-  header.style.cssText = 'text-align:center;padding:16px 0 20px;border-bottom:2px solid #22c55e;margin-bottom:20px;';
-  header.innerHTML = `<h1 style="color:#16a34a;font-size:22px;font-weight:800;margin-bottom:4px;">⚒️ Future Forge AI</h1><p style="color:#64748b;font-size:12px;">Career Roadmap for <strong style="color:#0f172a;">${lastUserData.goal||'Your Goal'}</strong> • ${new Date().toLocaleDateString()}</p>`;
-  clone.insertBefore(header, clone.firstChild);
+      <!-- User Details -->
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;margin-bottom:20px;">
+        <h3 style="color:#16a34a;font-size:14px;margin-bottom:10px;">👤 Your Profile</h3>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:4px 8px;font-size:12px;color:#475569;width:25%;"><strong>Goal:</strong></td>
+            <td style="padding:4px 8px;font-size:12px;color:#0f172a;">${lastUserData.goal||'-'}</td>
+            <td style="padding:4px 8px;font-size:12px;color:#475569;width:25%;"><strong>Level:</strong></td>
+            <td style="padding:4px 8px;font-size:12px;color:#0f172a;">${lastUserData.level||'-'}</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 8px;font-size:12px;color:#475569;"><strong>Daily Hours:</strong></td>
+            <td style="padding:4px 8px;font-size:12px;color:#0f172a;">${lastUserData.hours||'-'}</td>
+            <td style="padding:4px 8px;font-size:12px;color:#475569;"><strong>Timeline:</strong></td>
+            <td style="padding:4px 8px;font-size:12px;color:#0f172a;">${lastUserData.timeline||'-'}</td>
+          </tr>
+        </table>
+      </div>
 
-  document.body.appendChild(clone);
-  clone.style.position = 'fixed';
-  clone.style.left = '-9999px';
-  clone.style.top = '0';
-  clone.style.width = '800px';
+      <!-- Roadmap Content -->
+      <style>
+        .section{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:16px;}
+        .section h3{color:#16a34a;font-size:14px;font-weight:700;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #dcfce7;}
+        .section p{color:#374151;font-size:12px;line-height:1.6;margin-bottom:8px;}
+        .section ul{padding-left:18px;}
+        .section li{color:#374151;font-size:12px;line-height:1.7;margin-bottom:4px;}
+        .phase-block{background:#f0fdf4;border-left:3px solid #22c55e;padding:10px 14px;margin-bottom:8px;border-radius:0 6px 6px 0;}
+        .phase-title{color:#0f172a;font-weight:700;font-size:12px;margin-bottom:6px;}
+        .meta-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:10px;}
+        .meta-item{background:#f1f5f9;border-radius:6px;padding:8px;}
+        .meta-label{font-size:9px;color:#64748b;text-transform:uppercase;}
+        .meta-val{font-size:12px;color:#0f172a;font-weight:700;}
+        span[style*="color:#22c55e"]{color:#16a34a!important;}
+        span[style*="color:#f87171"]{color:#dc2626!important;}
+        span[style*="color:#facc15"]{color:#d97706!important;}
+      </style>
+      ${outputHTML}
+
+      <!-- Footer -->
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;text-align:center;">
+        <p style="color:#94a3b8;font-size:10px;">Generated by Future Forge AI • Your personalized career roadmap</p>
+      </div>
+    </div>
+  `;
+
+  // Create hidden container
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:820px;background:#fff;';
+  container.innerHTML = pdfHTML;
+  // Hide action buttons and canvas if any leaked in
+  container.querySelectorAll('.action-btns,.score-section,canvas,.result-header').forEach(el => el.remove());
+  document.body.appendChild(container);
 
   html2pdf().set({
-    margin:[10,10,10,10],
-    filename:`FutureForgeAI_${lastUserData.goal||'Roadmap'}.pdf`,
-    image:{type:'jpeg',quality:0.98},
-    html2canvas:{scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-  }).from(clone).save().then(() => {
-    document.body.removeChild(clone);
+    margin: [12, 12, 12, 12],
+    filename: `FutureForgeAI_${goal.replace(/\s+/g,'_')}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(container).save().then(() => {
+    document.body.removeChild(container);
   });
 }
 
