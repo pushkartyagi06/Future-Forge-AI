@@ -193,6 +193,11 @@ app.post("/analyze", async (req, res) => {
 });
 
 // ── Start ──────────────────────────────────────────────────────
+// Serve index.html for the root route
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
+
 app.listen(3000, () => {
   console.log("✅ Server running at http://localhost:3000");
 });
